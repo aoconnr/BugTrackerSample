@@ -1,0 +1,109 @@
+﻿@page "/"
+@using AireBugTracker.Data
+@using AireBugTracker.Exceptions
+@inject IJSRuntime JsRuntime
+@inject IBugService BugService
+@inject NavigationManager NavManager
+
+<PageTitle>AireBugTracker</PageTitle>
+
+@if (_bugs is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="row">
+        <div class="row-cols-6">
+            <button type="button" class="btn btn-primary" @onclick="@(() => NavManager.NavigateTo("bug"))">
+                <span class="oi oi-plus"></span> Report New Bug
+            </button>
+            <button type="button" class="btn btn-outline-primary" @onclick="() => ToggleClosed()">
+                <span class="oi oi-eye"></span>
+                @if (_showClosedBugs)
+                {
+                    <text> Hide Closed</text>
+                }
+                else
+                {
+                    <text> Show Closed</text>
+                }
+            </button>
+        </div>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Opened on</th>
+                @if (_showClosedBugs)
+                {
+                    <th>Closed on</th>
+                }
+                <th>AssignedTo</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var bug in _bugs)
+            {
+                <tr @ondblclick="(() => Edit(bug))">
+                    <td>@bug.Title</td>
+                    <td>@bug.OpenedDate.ToString("d, MMM, yyyy hh:mm")</td>
+                    @if (_showClosedBugs)
+                    {
+                        <td>@bug.ClosedDate?.ToString("d, MMM, yyyy hh:mm")</td>
+                    }
+                    <td>@bug.AssignedUser?.Name</td>
+                    <td>
+                        <button type="button" class="btn btn-success" @onclick="() => Edit(bug)"><span class="oi oi-pencil"></span></button>
+                        <button type="button" class="btn btn-danger" @onclick="() => Delete(bug)"><span class="oi oi-trash"></span></button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private List<Bug>? _bugs;
+    private Boolean _showClosedBugs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _bugs = await BugService.GetAll();
+    }
+
+    private void Edit(Bug bug)
+    {
+        if (bug is null) throw new ArgumentNullException(nameof(bug));
+        NavManager.NavigateTo($"bug/{bug.Id}");
+    }
+
+    private async Task Delete(Bug bug)
+    {
+        try
+        {
+            if (bug is null) throw new ArgumentNullException(nameof(bug));
+            await BugService.Delete(bug.Id);
+            _bugs.Remove(bug);
+        }
+        catch (ObjectNotFoundException)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Bug not found");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+
+    }
+
+    private async Task ToggleClosed()
+    {
+        _showClosedBugs = !_showClosedBugs;
+        _bugs = await BugService.GetAll(_showClosedBugs);
+        StateHasChanged();
+    }
+}

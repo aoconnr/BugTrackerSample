@@ -1,0 +1,53 @@
+﻿@page "/User"
+@page "/User/{userId:int}"
+@using AireBugTracker.Data
+@inject IUserService UserService
+@inject NavigationManager NavManager
+
+
+@if (User == null || User.Id == 0)
+{
+    <h3>Create New User</h3>
+}
+else
+{
+    <h3>Update User Details</h3>
+}
+
+
+<EditForm Model="@User" OnValidSubmit="SaveUser">
+    <DataAnnotationsValidator/>
+    <div class="mb-3">
+        <label for="Name" class="form-label">Name</label>
+        <div class="col-md-4">
+            <InputText class="form-control" @bind-Value="User.Name" />
+        </div>
+        <ValidationMessage For="@(() => User.Name)" />
+    </div>
+    <div class="form-group">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <button class="btn btn-light" type="button" @onclick="Cancel">Cancel</button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int UserId { get; set; }
+
+    private User User { get; set; } = new();
+    protected override async Task OnInitializedAsync()
+    {
+        if (UserId > 0) User = await UserService.Get(UserId);
+    }
+
+    protected async Task SaveUser()
+    {
+        if (User.Id == 0) await UserService.Create(User);
+        else await UserService.Update(User);
+        LeavePage();
+    }
+
+    public void Cancel() => LeavePage();
+
+    private void LeavePage() => NavManager.NavigateTo("users");
+}

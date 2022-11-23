@@ -1,0 +1,105 @@
+﻿@page "/Bug"
+@page "/Bug/{bugId:int}"
+@using AireBugTracker.Data
+@inject IBugService BugService
+@inject IUserService UserService
+@inject NavigationManager NavManager
+
+@if (Bug == null || Bug.Id == 0)
+{
+    <h3>Report New Bug</h3>
+}
+else
+{
+    <h3>Update Bug Details</h3>
+}
+
+<EditForm Model="@Bug" OnValidSubmit="SaveBug">
+    <DataAnnotationsValidator />
+    <div class="mb-3">
+        <label for="Title" class="form-label">Title</label>
+        <div class="col-md-4">
+            <InputText class="form-control" @bind-Value="Bug.Title" />
+        </div>
+        <ValidationMessage For="@(() => Bug.Title)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="Description" class="form-label">Description</label>
+        <div class="col-md-4">
+            <InputTextArea class="form-control" @bind-Value="Bug.Description" />
+        </div>
+        <ValidationMessage For="@(() => Bug.Description)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="AssignedUser" class="form-label">Assigned User</label>
+        <div class="col-md-4">
+            <select class="form-control selectpicker" @bind="AssignedUserId">
+                <option value="0">Unassinged</option>
+                @foreach (var user in Users)
+                {
+                    <option value="@user.Id">@user.Name</option>
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (Bug.Id > 0)
+    {
+        <div class="mb-3">
+            <label for="OpenedDate" class="form-label">Opened Date: @Bug.OpenedDate</label>
+        </div>
+        @if (Bug.ClosedDate is not null)
+        {
+            <div class="mb-3">
+                <label for="ClosedDate" class="form-label">Closed Date: @Bug.ClosedDate</label>
+            </div>
+        }
+    }
+
+    <div class="form-group">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <button class="btn btn-light" type="button" @onclick="LeavePage">Cancel <i class="far fa-trash-alt"></i></button>
+        @if (Bug.ClosedDate is null)
+        {
+            <button class="btn btn-success col-md-1 offset-md-2" type="button" @onclick="CloseBug">Close Bug</button>
+        }
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int BugId { get; set; }
+    public int AssignedUserId { get; set; }
+
+    private Bug Bug { get; set; } = new();
+    private List<User> Users { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (BugId > 0) Bug = await BugService.Get(BugId);
+        Users = await UserService.GetAll();
+    }
+
+    protected async Task SaveBug()
+    {
+        if (AssignedUserId > 0)
+        {
+            //Get from service again the ensure user still exists, not required if data changes updated views
+            Bug.AssignedUser = await UserService.Get(AssignedUserId);
+        }
+        if (Bug.Id == 0) await BugService.Create(Bug);
+        else await BugService.Update(Bug);
+        StateHasChanged();
+        LeavePage();
+    }
+
+    protected async Task CloseBug()
+    {
+        await BugService.Close(Bug);
+        LeavePage();
+    }
+
+    private void LeavePage() => NavManager.NavigateTo("");
+}

@@ -1,0 +1,83 @@
+﻿@page "/users"
+@using AireBugTracker.Data
+@using AireBugTracker.Exceptions
+@inject IJSRuntime JsRuntime
+@inject IUserService UserService
+@inject NavigationManager NavManager
+
+<PageTitle>AireBugTracker</PageTitle>
+
+@if (users is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <button type="button" class="btn btn-outline-primary" @onclick="@(() => NavManager.NavigateTo("user"))">
+        <span class="oi oi-plus"></span> Add User
+    </button>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var User in users)
+            {
+                <tr @ondblclick="(() => DoubleClick(User))">
+                    <td>@User.Name</td>
+                    <td>
+                        <button type="button" class="btn btn-success" @onclick="() => Edit(User)"><span class="oi oi-pencil"></span></button>
+                    </td>
+                </tr>
+
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private List<User>? users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserService.GetAll();
+    }
+
+    private void DoubleClick(User user)
+    {
+        if (user is null) throw new ArgumentNullException(nameof(user));
+        NavManager.NavigateTo($"User/{user.Id}");
+    }
+
+    private void Edit(User user)
+    {
+        if (user is null) throw new ArgumentNullException(nameof(user));
+        NavManager.NavigateTo($"User/{user.Id}");
+    }
+
+    private async Task Delete(User user)
+    {
+        try
+        {
+            if (user is null) throw new ArgumentNullException(nameof(user));
+            await UserService.Delete(user.Id);
+            users.Remove(user);
+        }
+        catch(UserAssignedToBugsException)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Unable to delete, user assigned to bugs");
+        }
+        catch(ObjectNotFoundException)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "user not found");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+}
