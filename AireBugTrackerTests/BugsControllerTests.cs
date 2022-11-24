@@ -20,9 +20,18 @@ namespace AireBugTrackerTests
         }
 
         [Fact]
-        public async Task GetAll()
+        public async Task GetOpen()
         {
             var response = await _controller.Get();
+
+            Assert.NotNull(response);
+            Assert.Equal(2, response.Count);
+        }
+
+        [Fact]
+        public async Task GetAll()
+        {
+            var response = await _controller.Get(true);
 
             Assert.NotNull(response);
             Assert.Equal(3, response.Count);
@@ -76,7 +85,7 @@ namespace AireBugTrackerTests
 
             Assert.Equal(request.Title, response.Title);
             Assert.Equal(request.Description, response.Description);
-            Assert.Equal(request.AssignedUserId, response.AssignedUser.Id);
+            Assert.Equal(request.AssignedUserId, response.AssignedUser?.Id);
         }
 
         [Fact]
@@ -103,7 +112,7 @@ namespace AireBugTrackerTests
             bug = await _controller.Get(1);
 
             Assert.NotNull(bug.AssignedUser);
-            Assert.Equal(1, bug.AssignedUser.Id);
+            Assert.Equal(1, bug.AssignedUser?.Id);
         }
 
         [Fact]

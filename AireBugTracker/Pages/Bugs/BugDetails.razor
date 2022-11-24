@@ -36,7 +36,7 @@ else
         <label for="AssignedUser" class="form-label">Assigned User</label>
         <div class="col-md-4">
             <select class="form-control selectpicker" @bind="AssignedUserId">
-                <option value="0">Unassinged</option>
+                <option value="0">Unassigned</option>
                 @foreach (var user in Users)
                 {
                     <option value="@user.Id">@user.Name</option>
@@ -78,7 +78,11 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        if (BugId > 0) Bug = await BugService.Get(BugId);
+        if (BugId > 0)
+        {
+            Bug = await BugService.Get(BugId);
+            AssignedUserId = Bug.AssignedUser?.Id ?? 0;
+        }
         Users = await UserService.GetAll();
     }
 

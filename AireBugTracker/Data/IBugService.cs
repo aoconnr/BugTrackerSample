@@ -59,7 +59,9 @@ namespace AireBugTracker.Data
 
             if (bug is null) throw new ObjectNotFoundException(nameof(bug));
 
-            _dbContext.Entry(bug).State = EntityState.Detached;
+            //Temp solution to prevent the model getting updated when editing a bug object.
+            //Larger system would not have the same object used for client and data levels
+            if (_dbContext.Entry(bug)?.State != null) _dbContext.Entry(bug).State = EntityState.Detached;
 
             return Task.FromResult(bug);
         }
@@ -74,6 +76,8 @@ namespace AireBugTracker.Data
 
         public Task<List<Bug>> GetByAssignedUser(int userId)
         {
+            if (userId == 0) throw new ArgumentNullException(nameof(userId));
+
             return Task.FromResult(_dbContext.Bugs.Where(b => b.AssignedUser != null && b.AssignedUser.Id == userId).ToList());
         }
 

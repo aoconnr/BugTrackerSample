@@ -13,6 +13,11 @@ namespace AireBugTrackerTests
 {
     internal static class ContextSetup
     {
+
+        /// <summary>
+        /// Generates mock DBContext with simple test data
+        /// </summary>
+        /// <returns></returns>
         public static DatabaseContext GenerateMockContext()
         {
             var bugData = new List<Bug>

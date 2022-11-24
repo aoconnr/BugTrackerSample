@@ -18,9 +18,9 @@ namespace AireBugTracker.Controller
         }
 
         [HttpGet]
-        public async Task<List<Bug>> Get()
+        public async Task<List<Bug>> Get([FromQuery]Boolean incClosed = false)
         {
-            return await _bugService.GetAll();
+            return await _bugService.GetAll(incClosed);
         }
 
         [HttpGet("{id}")]
