@@ -15,10 +15,10 @@ Instead, I have used Blazor with Entity Framework. These are suited for the task
 - Execute "dotnet ef database update" 
 
 ### Running:
-- Run in debug to launch in browser
+- Run Visual Studio to launch in browser (has only been tested in VS2022)
 - AireBugTrackerTest project contains basic unit tests using controller methods
 
-### Limitations
+### Limitations:
 - No authentication
 - Caching issue caused by EntityFramework tracking
 - Delete user not available in UI due to an issue managing EFs many-to-one connection
